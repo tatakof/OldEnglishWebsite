@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.551">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Generative AI for automatic syntactical and morphological annotation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="first_examples_files/libs/clipboard/clipboard.min.js"></script>
+<script src="first_examples_files/libs/quarto-html/quarto.js"></script>
+<script src="first_examples_files/libs/quarto-html/popper.min.js"></script>
+<script src="first_examples_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="first_examples_files/libs/quarto-html/anchor.min.js"></script>
+<link href="first_examples_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="first_examples_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="first_examples_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="first_examples_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="first_examples_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title" style="text-align: center;">Generative AI for automatic syntactical and morphological annotation</h1>
+<h2 style="text-align: center; font-size: smaller;">Authors: Francis Felici, Matías Núñez</h2>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
+<p>This project uses Generative AI to morphologically and syntactically annotate an old english corpus.</p>
+<p>The main task is the automatic Universal Dependencies (UD, Nivre et al., 2016) annotation of Old English. Universal Dependencies is a model of morpho-syntactic annotation devised for the compulation of computerised datasets. UD annotation is comprised of the following:</p>
+<ul>
+<li>UPOS (universal part-of-speech tags)</li>
+<li>XPOS (language-specific part-of-speech tags)</li>
+<li>Feats (universal morphological features)</li>
+<li>Lemmas</li>
+<li>Dependency heads and labels.</li>
+</ul>
+<p>Old English is the historical stage of the English language spoken in England between (approximately) the years 650 and 1150 (CE), and this language has written records of ~3 million words distributed across ~3 thousand texts. The main sources of these written records are:</p>
+<ul>
+<li>The Dictionary of Old English web corpus (Compiled by the University of Toronto, 3,000,000 words; Healey et al., 2004)</li>
+<li>The York-Toronto-Helsinki Parsed Corpus of Old English Prose (Taylor et al., 2003)</li>
+</ul>
+<p>The tagged dataset contains Old English text tagged for Part-of-Speech (POS) and parsed for dependency relations.</p>
+<div id="cb2de0a7" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>cd <span class="op">~/</span>old_english_annotation<span class="op">/</span>.</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> prompts.prompts <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> anthropic </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> src.everything <span class="im">import</span> <span class="op">*</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>/home/tatako/old_english_annotation</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/home/tatako/old_english_annotation/old_english/lib/python3.11/site-packages/IPython/core/magics/osm.py:393: UserWarning: This is now an optional IPython functionality, using bookmarks requires you to install the `pickleshare` library.
+  bkms = self.shell.db.get('bookmarks', {})
+/home/tatako/old_english_annotation/old_english/lib/python3.11/site-packages/IPython/core/magics/osm.py:417: UserWarning: This is now an optional IPython functionality, setting dhist requires you to install the `pickleshare` library.
+  self.shell.db['dhist'] = compress_dhist(dhist)[-100:]</code></pre>
+</div>
+</div>
+</section>
+<section id="methods" class="level3">
+<h3 class="anchored" data-anchor-id="methods">Methods</h3>
+<p>We taught our model to do syntactical and morphological annotation using Zero-Shot and Few-Shot techniques, optimized for this task. The model has learned from the following examples:</p>
+<div id="18512ca4" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'data/annotation_examples_first_half.json'</span>, <span class="st">'r'</span>) <span class="im">as</span> f:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    taught_examples <span class="op">=</span> json.load(f)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps(taught_examples, ensure_ascii<span class="op">=</span><span class="va">False</span>, indent<span class="op">=</span><span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[
+    {
+        "raw": "Adrianus cwæð to Ritheus.",
+        "syntactical": "  (IP-MAT (NP-NOM (NR^N Adrianus)) \n\t  (VBDI cwæð)\n\t  (PP (P to)\n\t      (NP (NR Ritheus)))\n\t  (, .)",
+        "morphological": "Adrianus_NR^N cwæð_VBDI to_P Ritheus_NR"
+    },
+    {
+        "raw": "Saga me hu lange wæs Adam on neorxnawange.",
+        "syntactical": "\n\t  (IP-MAT-SPE (VBI Saga)\n\t\t      (NP (PRO me))\n\t\t      (CP-QUE-SPE (WADVP-TMP-1 (WADV hu) (ADV^T lange))\n\t\t\t\t  (IP-SUB-SPE (ADVP-TMP *T*-1)\n\t\t\t\t\t  (BEDI wæs)\n\t\t\t\t\t  (NP-NOM (NR^N Adam))\n\t\t\t\t\t  (PP (P on)\n\t\t\t\t\t      (NP-DAT (N^D neorxnawange))))))\n\t  (. .)",
+        "morphological": "._,\nSaga_VBI me_PRO hu_WADV lange_ADV^T wæs_BEDI\nAdam_NR^N on_P neorxnawange_N^D"
+    },
+    {
+        "raw": "Ic þe secge, he wæs þrittine gear.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (IP-MAT-SPE (NP-NOM (PRO^N he))\n\t\t\t  (BEDI wæs)\n\t\t\t  (NP-ACC-TMP (NUM þrittine) (N^A gear)))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, he_PRO^N\nwæs_BEDI þrittine_NUM gear_N^A"
+    },
+    {
+        "raw": "Saga me on hwilcne dæig he gesingode.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WPP-1 (P on)\n\t\t\t     (WNP-ACC (WADJ^A hwilcne) (N^A dæig)))\n\t\t      (C 0) \n\t\t      (IP-SUB-SPE (PP *T*-1)\n\t\t\t      (NP-NOM (PRO^N he))\n\t\t\t      (VBD gesingode)))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO on_P hwilcne_WADJ^A dæig_N^A\nhe_PRO^N gesingode_VBD"
+    },
+    {
+        "raw": "Saga me on hwæðere Adames sidan nam ure Drihten þæt ribb þe he þæt wif of geworhte.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WPP-1 (P on)\n\t\t\t\t (WNP (WADJ hwæðere)\n\t\t\t\t      (NP-GEN (NR^G Adames))\n\t\t\t\t      (N sidan)))\n\t\t\t  (IP-SUB-SPE (PP *T*-1)\n\t\t\t\t  (VBDI nam)\n\t\t\t\t  (NP-NOM (PRO$^N ure) (NR^N Drihten))\n\t\t\t\t  (NP-ACC (D^A þæt) (N^A ribb)\n\t\t\t\t\t  (CP-REL-SPE (WNP-2 0)\n\t\t\t\t\t\t  (C þe)\n\t\t\t\t\t\t  (IP-SUB-SPE (NP-NOM (PRO^N he))\n\t\t\t\t\t\t\t  (NP-ACC (D^A þæt) (N^A wif))\n\t\t\t\t\t\t\t  (PP (NP *T*-2)\n\t\t\t\t\t\t\t      (P of))\n\t\t\t\t\t\t\t  (VBD geworhte))))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO on_P hwæðere_WADJ Adames_NR^G\nsidan_N nam_VBDI ure_PRO$^N Drihten_NR^N þæt_D^A ribb_N^A þe_C\nhe_PRO^N þæt_D^A wif_N^A of_P geworhte_VBD"
+    },
+    {
+        "raw": "Ic þe secge, on ðære winstran.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (PP (P on)\n\t\t       (NP-DAT (D^D ðære) (ADJR^D winstran))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, on_P ðære_D^D\nwinstran_ADJR^D"
+    },
+    {
+        "raw": "Saga me hwær sæt ure drihten þa he geworhte heofonan and eorðan and ealle gesceafta.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WADVP-LOC-1 (WADV^L hwær))\n\t\t\t  (IP-SUB-SPE (ADVP-LOC *T*-1)\n\t\t\t\t  (VBDI sæt)\n\t\t\t\t  (NP-NOM (PRO$^N ure) (NR^N Drihten))\n\t\t\t\t  (CP-ADV-SPE (P þa)\n\t\t\t\t\t   (C 0)\n\t\t\t\t\t   (IP-SUB-SPE (NP-NOM (PRO^N he))\n\t\t\t\t\t\t   (VBD geworhte)\n\t\t\t\t\t\t   (NP-ACC (NP-ACC (N^A heofonan))\n\t\t\t\t\t\t\t   (CONJP (CONJ and)\n\t\t\t\t\t\t\t\t  (NP-ACC (N^A eorðan)))\n\t\t\t\t\t\t\t   (CONJP (CONJ and)\n\t\t\t\t\t\t\t\t  (NP-ACC (Q^A ealle) (N^A gesceafta))))))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO hwær_WADV^L sæt_VBDI\nure_PRO$^N Drihten_NR^N þa_P he_PRO^N geworhte_VBD heofonan_N^A\nand_CONJ eorðan_N^A and_CONJ ealle_Q^A gesceafta_N^A"
+    },
+    {
+        "raw": "Ic þe secge, ofer winda fiðerum.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (PP (P ofer)\n\t\t       (NP-DAT (NP-GEN (N^G winda))\n\t\t\t       (N^D fiðerum))))\n\t      (. .)",
+        "morphological": "._.\nIc_PRO^N þe_PRO secge_VBP ,_, ofer_P winda_N^G\nfiðerum_N^D"
+    },
+    {
+        "raw": "Saga me hwær is seo eorðe þe næfre sunne on ne scean, ne mona, ne næfre wind on ne bleow, nane tid dæges ne ær ne æfter.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WADVP-LOC-1 (WADV^L hwær))\n\t\t\t  (IP-SUB-SPE (ADVP-LOC *T*-1)\n\t\t\t\t  (BEPI is)\n\t\t\t\t  (NP-NOM (D^N seo) (N^N eorðe)\n\t\t\t\t\t  (CP-REL-SPE (WNP-2 0)\n\t\t\t\t\t\t  (C þe)\n\t\t\t\t\t\t  (IP-SUB-SPE (IP-SUB-SPE (ADVP-TMP (NEG+ADV^T næfre))\n\t\t\t\t\t\t\t\t  (NP-NOM (N^N sunne)\n\t\t\t\t\t\t\t\t\t  (CONJP *ICH*-3))\n\t\t\t\t\t\t\t\t  (PP (NP *T*-2)\n\t\t\t\t\t\t\t\t      (P on))\n\t\t\t\t\t\t\t\t  (NEG ne)\n\t\t\t\t\t\t\t\t  (VBDI scean)\n\t\t\t\t\t\t\t\t  (, ,)\n\t\t\t\t\t\t\t\t  (CONJP-3 (NEG+CONJ ne) (N^N mona)))\n\t\t\t\t\t\t\t  (, ,)\n\t\t\t\t\t\t\t  (CONJP (NEG+CONJ ne)\n\t\t\t\t\t\t\t\t (IP-SUB-CON-SPE (ADVP-TMP (NEG+ADV^T næfre))\n\t\t\t\t\t\t\t\t\t (NP-NOM (N^N wind))\n\t\t\t\t\t\t\t\t\t (PP (NP *T*-2)\n\t\t\t\t\t\t\t\t\t     (P on))\n\t\t\t\t\t\t\t\t\t (NEG ne)\n\t\t\t\t\t\t\t\t\t (VBDI bleow)\n\t\t\t\t\t\t\t\t\t (, ,)\n\t\t\t\t\t\t\t\t\t (NP-ACC-TMP (NEG+Q^A nane) (N^A tid) \n\t\t\t\t\t\t\t\t\t\t     (NP-GEN (N^G dæges)))\n\t\t\t\t\t\t\t\t\t (ADVP-TMP (NEG+CONJ ne) (ADV^T ær) (NEG+CONJ ne) (RP æfter)))))))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO hwær_WADV^L is_BEPI seo_D^N\neorðe_N^N þe_C næfre_NEG+ADV^T sunne_N^N on_P ne_NEG scean_VBDI ,_,\nne_NEG+CONJ mona_N^N ,_, ne_NEG+CONJ næfre_NEG+ADV^T wind_N^N on_P\nne_NEG bleow_VBDI ,_, nane_NEG+Q^A tid_N^A dæges_N^G ne_NEG+CONJ\nær_ADV^T ne_NEG+CONJ æfter_RP"
+    },
+    {
+        "raw": "Ic þe secge, seo eorðe is in þære readan sæ ofer þære eode Israela folc of Egipta hæftnode.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (IP-MAT-SPE (NP-NOM (D^N seo) (N^N eorðe))\n\t\t\t  (BEPI is)\n\t\t\t  (PP (P in)\n\t\t\t      (NP-DAT (D^D þære) (ADJ^D readan) (N^D sæ)\n\t\t\t\t      (CP-REL-SPE (WPP-1 (P ofer)\n\t\t\t\t\t\t     (NP-DAT (D^D þære)))\n\t\t\t\t\t      (C 0) \n\t\t\t\t\t      (IP-SUB-SPE (PP *T*-1)\n\t\t\t\t\t\t      (VBD eode)\n\t\t\t\t\t\t      (NP-NOM (NP-GEN (NR^G Israela))\n\t\t\t\t\t\t\t      (N^N folc))\n\t\t\t\t\t\t      (PP (P of)\n\t\t\t\t\t\t\t  (NP-DAT (NP-GEN (NR^G Egipta))\n\t\t\t\t\t\t\t\t  (N^D hæftnode))))))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, seo_D^N\neorðe_N^N is_BEPI in_P þære_D^D readan_ADJ^D sæ_N^D ofer_P\nþære_D^D eode_VBD Israela_NR^G folc_N^N of_P Egipta_NR^G\nhæftnode_N^D"
+    },
+    {
+        "raw": "Saga me hwær scyne seo sunne on niht.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WADVP-LOC-1 (WADV^L hwær))\n\t\t\t  (IP-SUB-SPE (ADVP-LOC *T*-1)\n\t\t\t\t  (VBPS scyne)\n\t\t\t\t  (NP-NOM (D^N seo) (N^N sunne))\n\t\t\t\t  (PP (P on)\n\t\t\t\t      (NP-ACC (N^A niht)))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO hwær_WADV^L scyne_VBPS seo_D^N\nsunne_N^N on_P niht_N^A"
+    },
+    {
+        "raw": "Saga me for hwam scyne seo sunne swa reade on ærnemorgien.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WPP-1 (P for)\n\t\t\t\t (WNP-DAT (WPRO^D hwam)))\n\t\t\t  (IP-SUB-SPE (PP *T*-1)\n\t\t\t\t  (VBPS scyne)\n\t\t\t\t  (NP-NOM (D^N seo) (N^N sunne))\n\t\t\t\t  (ADVP (ADV swa) (ADV reade))\n\t\t\t\t  (PP (P on)\n\t\t\t\t      (NP-DAT (N^D ærnemorgien)))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO for_P hwam_WPRO^D scyne_VBPS\nseo_D^N sunne_N^N swa_ADV reade_ADV on_P ærnemorgien_N^D"
+    },
+    {
+        "raw": "Ic þe secge, for þam ðe heo kymð up of þære sæ.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (CP-ADV-SPE (P for) (D^D þam)\n\t\t\t   (C ðe)\n\t\t\t   (IP-SUB-SPE (NP-NOM (PRO^N heo))\n\t\t\t\t   (VBPI kymð)\n\t\t\t\t   (PP (RP up)\n\t\t\t\t       (P of)\n\t\t\t\t       (NP-DAT (D^D þære) (N^D sæ))))))\n\t      (. .)",
+        "morphological": "._.\nIc_PRO^N þe_PRO secge_VBP ,_, for_P þam_D^D\nðe_C heo_PRO^N kymð_VBPI up_RP of_P þære_D^D sæ_N^D"
+    },
+    {
+        "raw": "&lt;Saga&gt; me for hwam byð seo sunne swa read on æfen.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI $Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WPP-1 (P for)\n\t\t\t\t (WNP-DAT (WPRO^D hwam)))\n\t\t\t  (IP-SUB-SPE (PP *T*-1)\n\t\t\t\t  (BEPI byð)\n\t\t\t\t  (NP-NOM (D^N seo) (N^N sunne))\n\t\t\t\t  (ADJP-NOM-PRD (ADV swa) (ADJ^N read))\n\t\t\t\t  (PP (P on)\n\t\t\t\t      (NP-ACC (N^A æfen)))))\n\t      (. .)",
+        "morphological": "._.\n$Saga_VBI me_PRO for_P hwam_WPRO^D byð_BEPI\nseo_D^N sunne_N^N swa_ADV read_ADJ^N on_P æfen_N^A"
+    },
+    {
+        "raw": "&lt;Ic&gt; þe secge, for þan þe heo lokað ufan on helle.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N $Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (CP-ADV-SPE (P for) (D^I þan)\n\t\t\t    (C þe)\n\t\t\t    (IP-SUB-SPE (NP-NOM (PRO^N heo))\n\t\t\t\t    (VBPI lokað)\n\t\t\t\t    (ADVP-LOC (ADV^L ufan))\n\t\t\t\t    (PP (P on)\n\t\t\t\t\t(NP (N helle))))))\n\t      (. .)",
+        "morphological": "._.\n$Ic_PRO^N þe_PRO secge_VBP ,_, for_P þan_D^I\nþe_C heo_PRO^N lokað_VBPI ufan_ADV^L on_P helle_N"
+    },
+    {
+        "raw": "&lt;Saga&gt; me hu mycel seo sunne sy.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI $Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WQP-NOM-1 (WADV hu) (Q^N mycel))\n\t\t      (C 0) \n\t\t      (IP-SUB-SPE (QP-NOM-PRD *T*-1)\n\t\t\t      (NP-NOM (D^N seo) (N^N sunne))\n\t\t\t      (BEPS sy)))\n\t      (. .)",
+        "morphological": "._.\n$Saga_VBI me_PRO hu_WADV mycel_Q^N seo_D^N\nsunne_N^N sy_BEPS"
+    },
+    {
+        "raw": "Ic þe secge, heo ys mare þonne eorðe for þam heo byð on ælcum lande hat.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (IP-MAT-SPE-0 (NP-NOM (PRO^N heo))\n\t\t\t    (BEPI ys)\n\t\t\t    (QP-NOM-PRD (QR^N mare)\n\t\t\t\t\t(PP (P þonne)\n\t\t\t\t\t    (CP-CMP-SPE (WQP-1 0)\n\t\t\t\t\t\t    (C 0)\n\t\t\t\t\t\t    (IPX-SUB-SPE=0 (QP-PRD *T*-1)\n\t\t\t\t\t\t\t\t(NP-NOM (N^N eorðe))))))\n\t\t\t    (CP-ADV-SPE (P for) (D^D þam)\n\t\t\t\t     (C 0)\n\t\t\t\t     (IP-SUB-SPE (NP-NOM (PRO^N heo))\n\t\t\t\t\t     (BEPI byð)\n\t\t\t\t\t     (PP (P on)\n\t\t\t\t\t\t (NP-DAT (Q^D ælcum) (N^D lande)))\n\t\t\t\t\t     (ADJP-NOM-PRD (ADJ^N hat)))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, heo_PRO^N\nys_BEPI mare_QR^N þonne_P eorðe_N^N for_P þam_D^D heo_PRO^N\nbyð_BEPI on_P ælcum_Q^D lande_N^D hat_ADJ^N"
+    },
+    {
+        "raw": "Saga me hwilc sy seo sunne.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WADJP-NOM-1 (WADJ^N hwilc))\n\t\t\t  (IP-SUB-SPE (ADJP-NOM-PRD *T*-1)\n\t\t\t\t  (BEPS sy)\n\t\t\t\t  (NP-NOM (D^N seo) (N^N sunne))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO hwilc_WADJ^N sy_BEPS seo_D^N\nsunne_N^N"
+    },
+    {
+        "raw": "Ic þe secge, Astriges se dry sæde þæt hit wære byrnende stan.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (IP-MAT-SPE (NP-NOM (NR^N Astriges)\n\t\t\t\t  (NP-NOM-PRN (D^N se) (N^N dry)))\n\t\t\t  (VBD sæde)\n\t\t\t  (CP-THT-SPE (C þæt)\n\t\t\t\t  (IP-SUB-SPE (NP-NOM (PRO^N hit))\n\t\t\t\t\t  (BEDS wære)\n\t\t\t\t\t  (NP-NOM-PRD (VAG^N byrnende) (N^N stan)))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, Astriges_NR^N\nse_D^N dry_N^N sæde_VBD þæt_C hit_PRO^N wære_BEDS byrnende_VAG^N\nstan_N^N"
+    },
+    {
+        "raw": "Saga me hwæt þæs liuigendan mannes gleng sy.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WPRO^N hwæt))\n\t\t      (C 0)\n\t\t      (IP-SUB-SPE (NP-NOM-PRD *T*-1)\n\t\t\t      (NP-NOM (NP-GEN (D^G þæs) (VAG^G liuigendan) (N^G mannes))\n\t\t\t\t      (N^N gleng))\n\t\t\t      (BEPS sy)))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO hwæt_WPRO^N þæs_D^G\nliuigendan_VAG^G mannes_N^G gleng_N^N sy_BEPS"
+    },
+    {
+        "raw": "Ic þe secge, þas deadan swat.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NP-GEN (D^G þas) (ADJ^G deadan))\n\t\t\t   (N^N swat)))\n\t      (. .)",
+        "morphological": "._.\nIc_PRO^N þe_PRO secge_VBP ,_, þas_D^G\ndeadan_ADJ^G swat_N^N"
+    },
+    {
+        "raw": "&lt;Saga&gt; me hwilc sunu wræce ærest &lt;his&gt; fæder on hys moder innoðe.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI $Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WADJ^N hwilc) (N^N sunu))\n\t\t\t  (IP-SUB-SPE (NP-NOM *T*-1)\n\t\t\t\t  (VBDS wræce)\n\t\t\t\t  (ADVP-TMP (ADVS^T ærest))\n\t\t\t\t  (NP (PRO$ $his) (N fæder))\n\t\t\t\t  (PP (P on)\n\t\t\t\t      (NP-DAT (NP-GEN (PRO$ hys) (N^G moder))\n\t\t\t\t\t      (N^D innoðe)))))\n\t      (. .)",
+        "morphological": "\n$Saga_VBI me_PRO hwilc_WADJ^N sunu_N^N\nwræce_VBDS ærest_ADVS^T $his_PRO$ fæder_N on_P hys_PRO$ moder_N^G\ninnoðe_N^D"
+    },
+    {
+        "raw": "Ic þe secge, þære næddran sunu, for þam ðe seo moder ofsloh ær þane fæder, and þonne ofsleað þa bearn eft þa moder.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NP-GEN (D^G þære) (N^G næddran))\n\t\t\t   (N^N sunu))\n\t\t   (, ,)\n\t\t   (CP-ADV-SPE (P for) (D^D þam)\n\t\t\t    (C ðe)\n\t\t\t    (IP-SUB-SPE (IP-SUB-SPE (NP-NOM (D^N seo) (N^N moder))\n\t\t\t\t\t    (RP+VBDI ofsloh)\n\t\t\t\t\t    (ADVP-TMP (ADV^T ær))\n\t\t\t\t\t    (NP-ACC (D^A þane) (N^A fæder)))\n\t\t\t\t    (, ,)\n\t\t\t\t    (CONJP (CONJ and)\n\t\t\t\t\t   (IP-SUB-CON-SPE (ADVP-TMP (ADV^T þonne))\n\t\t\t\t\t\t   (RP+VBPI ofsleað)\n\t\t\t\t\t\t   (NP-NOM (D^N þa) (N^N bearn))\n\t\t\t\t\t\t   (ADVP-TMP (ADV^T eft))\n\t\t\t\t\t\t   (NP-ACC (D^A þa) (N^A moder)))))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, þære_D^G\nnæddran_N^G sunu_N^N ,_, for_P þam_D^D ðe_C seo_D^N moder_N^N\nofsloh_RP+VBDI ær_ADV^T þane_D^A fæder_N^A ,_, and_CONJ þonne_ADV^T\nofsleað_RP+VBPI þa_D^N bearn_N^N eft_ADV^T þa_D^A moder_N^A"
+    },
+    {
+        "raw": "Saga me hwilc bisceop wære ærest on þare ealdan æ ær Cristes tokyme.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WADJ^N hwilc) (N^N bisceop))\n\t\t\t  (IP-SUB-SPE (NP-NOM *T*-1)\n\t\t\t\t  (BEDS wære)\n\t\t\t\t  (ADVP-TMP (ADVS^T ærest))\n\t\t\t\t  (PP (P on)\n\t\t\t\t      (NP-DAT (D^D þare) (ADJ^D ealdan) (N^D æ)))\n\t\t\t\t  (PP (P ær)\n\t\t\t\t      (NP (NP-GEN (NR^G Cristes))\n\t\t\t\t\t  (N tokyme)))))\n\t      (. .)",
+        "morphological": "._.\nSaga_VBI me_PRO hwilc_WADJ^N bisceop_N^N\nwære_BEDS ærest_ADVS^T on_P þare_D^D ealdan_ADJ^D æ_N^D ær_P\nCristes_NR^G tokyme_N"
+    },
+    {
+        "raw": "Ic þe secge, Melchisedech and Aaron.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NR^N Melchisedech) (CONJ and) (NR^N Aaron)))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_,\nMelchisedech_NR^N and_CONJ Aaron_NR^N"
+    },
+    {
+        "raw": "Ic þe secge, Petrus and Iacobus.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NR^N Petrus) (CONJ and) (NR^N Iacobus)))\n\t      (. .)",
+        "morphological": "on_P þære_D^D niwan_ADJ^D æ_N^D ._.\nIc_PRO^N þe_PRO secge_VBP ,_, Petrus_NR^N\nand_CONJ Iacobus_NR^N"
+    },
+    {
+        "raw": "&lt;Saga&gt; me hwilc man witegode ærest.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI $Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WADJ^N hwilc) (N^N man))\n\t\t\t  (IP-SUB-SPE (NP-NOM *T*-1)\n\t\t\t\t  (VBD witegode)\n\t\t\t\t  (ADVP-TMP (ADVS^T ærest))))\n\t      (. .)",
+        "morphological": "\n$Saga_VBI me_PRO hwilc_WADJ^N man_N^N\nwitegode_VBD ærest_ADVS^T"
+    },
+    {
+        "raw": "Ic þe secge, Samuel.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NR^N Samuel)))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, Samuel_NR^N"
+    },
+    {
+        "raw": "Saga me hwa wrat bocstafas ærest.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WPRO^N hwa))\n\t\t\t  (IP-SUB-SPE (NP-NOM *T*-1)\n\t\t\t\t  (VBDI wrat)\n\t\t\t\t  (NP-ACC (N^A bocstafas))\n\t\t\t\t  (ADVP-TMP (ADVS^T ærest))))\n\t      (. .)",
+        "morphological": "._.\nSaga_VBI me_PRO hwa_WPRO^N wrat_VBDI\nbocstafas_N^A ærest_ADVS^T"
+    },
+    {
+        "raw": "Ic þe secge, Mercurius se gigant.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NR^N Mercurius)\n\t\t\t   (NP-NOM-PRN (D^N se) (N^N gigant))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, Mercurius_NR^N\nse_D^N gigant_N^N"
+    },
+    {
+        "raw": "Ic þe secge, Noe.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP-NOM (NR^N Noe)))\n\t      (. .)",
+        "morphological": "of_P þe_D^I hwa_Q^N dranc_VBDI\nærest_ADVS^T $win_N^A \nIc_PRO^N þe_PRO secge_VBP ,_, Noe_NR^N"
+    },
+    {
+        "raw": "Sæga me hwa wære ærest læce.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Sæga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WPRO^N hwa))\n\t\t\t  (IP-SUB-SPE (NP-NOM *T*-1)\n\t\t\t\t  (BEDS wære)\n\t\t\t\t  (ADVP-TMP (ADVS^T ærest))\n\t\t\t\t  (NP-NOM-PRD (N^N læce))))\n\t      (. .)",
+        "morphological": "._.\nSæga_VBI me_PRO hwa_WPRO^N wære_BEDS\nærest_ADVS^T læce_N^N"
+    },
+    {
+        "raw": "Ic þe secge, Aslerius se wæs cwæden.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (IP-MAT-SPE (NP-NOM-PRD (NR^N Aslerius))\n\t\t\t  (NP-NOM (D^N se))\n\t\t\t  (BEDI wæs)\n\t\t\t  (VBN cwæden))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, Aslerius_NR^N\nse_D^N wæs_BEDI cwæden_VBN"
+    },
+    {
+        "raw": "Sæga me hwæt sint þa twegen men on neorxnawang and þas gelomlice wepað and beoð unrote.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Sæga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WPRO^N hwæt))\n\t\t\t  (IP-SUB-SPE (IP-SUB-SPE (NP-NOM-PRD *T*-1)\n\t\t\t\t\t  (BEPI sint)\n\t\t\t\t\t  (NP-NOM (D^N þa) (NUM^N twegen) (N^N men))\n\t\t\t\t\t  (PP (P on)\n\t\t\t\t\t      (NP-ACC (N^A neorxnawang))))\n\t\t\t\t  (CONJP (CONJ and) \n\t\t\t\t\t (IP-SUB-CON-SPE (NP-NOM (D^N þas))\n\t\t\t\t\t\t (ADVP (ADV gelomlice))\n\t\t\t\t\t\t (VBPI wepað)))\n\t\t\t\t  (CONJP (CONJ and)\n\t\t\t\t\t (IP-SUB-CON-SPE (NP-NOM *con*)\n\t\t\t\t\t\t (BEPI beoð)\n\t\t\t\t\t\t (ADJP-NOM-PRD (ADJ^N unrote))))))\n\t      (. .)",
+        "morphological": "\nSæga_VBI me_PRO hwæt_WPRO^N sint_BEPI\nþa_D^N twegen_NUM^N men_N^N on_P neorxnawang_N^A and_CONJ þas_D^N\ngelomlice_ADV wepað_VBPI and_CONJ beoð_BEPI unrote_ADJ^N"
+    },
+    {
+        "raw": "Saga me hwær wuniað hy.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WADVP-LOC-1 (WADV^L hwær))\n\t\t\t  (IP-SUB-SPE (ADVP-LOC *T*-1)\n\t\t\t\t  (VBPI wuniað)\n\t\t\t\t  (NP-NOM (PRO^N hy))))\n\t      (. .)",
+        "morphological": "._.\nSaga_VBI me_PRO hwær_WADV^L wuniað_VBPI\nhy_PRO^N"
+    },
+    {
+        "raw": "Ic þe secge, Malifica and Intimphonis; þæt is on simfelda and on sceanfelda.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (NP (NR Malifica) (CONJ and) (NR Intimphonis))\n\t\t   (, ;)\n\t\t   (-PRN (NP-NOM (D^N þæt))\n\t\t\t       (BEPI is)\n\t\t\t       (XP (PP (PP (P on)\n\t\t\t\t\t   (NP (N simfelda)))\n\t\t\t\t       (CONJP (CONJ and)\n\t\t\t\t\t      (PP (P on)\n\t\t\t\t\t\t  (NP (N sceanfelda))))))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, Malifica_NR\nand_CONJ Intimphonis_NR ;_, þæt_D^N is_BEPI on_P simfelda_N and_CONJ\non_P sceanfelda_N"
+    },
+    {
+        "raw": "Saga me for hwam si se hreuen swa sweart þe ær wæs hwit.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WPP-1 (P for)\n\t\t\t\t (WNP-DAT (WPRO^D hwam)))\n\t\t\t  (IP-SUB-SPE (PP *T*-1)\n\t\t\t\t  (BEPS si)\n\t\t\t\t  (NP-NOM (D^N se) (N^N hreuen)\n\t\t\t\t\t  (CP-REL-SPE *ICH*-2))\n\t\t\t\t  (ADJP-NOM-PRD (ADV swa) (ADJ^N sweart))\n\t\t\t\t  (CP-REL-SPE-2 (WNP-NOM-3 0)\n\t\t\t\t\t    (C þe)\n\t\t\t\t\t    (IP-SUB-SPE (NP-NOM *T*-3)\n\t\t\t\t\t\t    (ADVP-TMP (ADV^T ær))\n\t\t\t\t\t\t    (BEDI wæs)\n\t\t\t\t\t\t    (ADJP-NOM-PRD (ADJ^N hwit))))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO for_P hwam_WPRO^D si_BEPS\nse_D^N hreuen_N^N swa_ADV sweart_ADJ^N þe_C ær_ADV^T wæs_BEDI\nhwit_ADJ^N"
+    },
+    {
+        "raw": "Ic þe secge, for þy þe he eft ne gehwirfde to Noe in to þære arke þe he ær of gesend was.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (CP-ADV-SPE (P for) (D^I þy)\n\t\t\t    (C þe)\n\t\t\t    (IP-SUB-SPE (NP-NOM (PRO^N he))\n\t\t\t\t    (ADVP-TMP (ADV^T eft))\n\t\t\t\t    (NEG ne)\n\t\t\t\t    (VBD gehwirfde)\n\t\t\t\t    (PP (P to)\n\t\t\t\t\t(NP (NR Noe)))\n\t\t\t\t    (PP (RP in) (P to)\n\t\t\t\t\t(NP-DAT (D^D þære) (N^D arke)\n\t\t\t\t\t\t(CP-REL-SPE (WNP-1 0)\n\t\t\t\t\t\t\t(C þe)\n\t\t\t\t\t\t\t(IP-SUB-SPE (NP-NOM (PRO^N he))\n\t\t\t\t\t\t\t\t(ADVP-TMP (ADV^T ær))\n\t\t\t\t\t\t\t\t(PP (NP *T*-1)\n\t\t\t\t\t\t\t\t    (P of))\n\t\t\t\t\t\t\t\t(VBN gesend)\n\t\t\t\t\t\t\t\t(BEDI was))))))))\n\t      (. .)",
+        "morphological": "\nIc_PRO^N þe_PRO secge_VBP ,_, for_P þy_D^I\nþe_C he_PRO^N eft_ADV^T ne_NEG gehwirfde_VBD to_P Noe_NR in_RP to_P\nþære_D^D arke_N^D þe_C he_PRO^N ær_ADV^T of_P gesend_VBN was_BEDI\n$Saga_VBI"
+    },
+    {
+        "raw": "Ic þe secge, þa he fedde Heliam þa he in eode to þam &lt;westenne&gt; and him þenode.",
+        "syntactical": ") \n  (IP-MAT-SPE (NP-NOM (PRO^N Ic))\n\t      (NP (PRO þe))\n\t      (VBP secge)\n\t      (, ,)\n\t      (QTP (CP-ADV-SPE (P þa)\n\t\t\t    (C 0)\n\t\t\t    (IP-SUB-SPE (NP-NOM (PRO^N he))\n\t\t\t\t    (VBD fedde)\n\t\t\t\t    (NP-ACC (NR^A Heliam))\n\t\t\t\t    (CP-ADV-SPE (P þa)\n\t\t\t\t\t     (C 0)\n\t\t\t\t\t     (IP-SUB-SPE (IP-SUB-SPE (NP-NOM (PRO^N he))\n\t\t\t\t\t\t\t     (RP in)\n\t\t\t\t\t\t\t     (VBD eode)\n\t\t\t\t\t\t\t     (PP (P to)\n\t\t\t\t\t\t\t\t (NP-DAT (D^D þam) (N^D $westenne))))\n\t\t\t\t\t\t     (CONJP (CONJ and)\n\t\t\t\t\t\t\t    (IP-SUB-CON-SPE (NP-NOM *con*)\n\t\t\t\t\t\t\t\t    (NP-DAT (PRO^D him))\n\t\t\t\t\t\t\t\t    (VBD þenode))))))))\n\t      (. .)",
+        "morphological": "._.\nIc_PRO^N þe_PRO secge_VBP ,_, þa_P he_PRO^N\nfedde_VBD Heliam_NR^A þa_P he_PRO^N in_RP eode_VBD to_P þam_D^D\n$westenne_N^D and_CONJ him_PRO^D þenode_VBD"
+    },
+    {
+        "raw": "Saga me hwær byð mannes mod.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WADVP-LOC-1 (WADV^L hwær))\n\t\t\t  (IP-SUB-SPE (ADVP-LOC *T*-1)\n\t\t\t\t  (BEPI byð)\n\t\t\t\t  (NP-NOM (NP-GEN (N^G mannes))\n\t\t\t\t\t  (N^N mod))))\n\t      (. .)",
+        "morphological": "\nSaga_VBI me_PRO hwær_WADV^L byð_BEPI\nmannes_N^G mod_N^N"
+    },
+    {
+        "raw": "Saga me hwilce wihta beoð oðre tid wifkinnes and oþre tid wæpnedkinnes.",
+        "syntactical": ") \n  (IP-MAT-SPE (VBI Saga)\n\t      (NP (PRO me))\n\t      (CP-QUE-SPE (WNP-NOM-1 (WADJ^N hwilce) (N^N wihta))\n\t\t\t  (IP-SUB-SPE (IP-SUB-SPE-0 (NP-NOM *T*-1)\n\t\t\t\t\t    (BEPI beoð)\n\t\t\t\t\t    (NP-ACC-TMP (ADJ^A oðre) (N^A tid))\n\t\t\t\t\t    (NP-GEN-PRD (N^G wifkinnes)))\n\t\t\t\t  (CONJP (CONJ and)\n\t\t\t\t\t (IPX-SUB-CON-SPE=0 (NP-ACC-TMP (ADJ^A oþre) (N^A tid))\n\t\t\t\t\t\t     (NP-GEN-PRD (N^G wæpnedkinnes))))))\n\t      (. .)",
+        "morphological": "._.\nSaga_VBI me_PRO hwilce_WADJ^N wihta_N^N\nbeoð_BEPI oðre_ADJ^A tid_N^A wifkinnes_N^G and_CONJ oþre_ADJ^A\ntid_N^A wæpnedkinnes_N^G"
+    }
+]</code></pre>
+</div>
+</div>
+<p>And we tested our model on the following examples, which were not previously seen by our model.</p>
+<div id="aac31566" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'data/annotation_examples_second_half.json'</span>, <span class="st">'r'</span>) <span class="im">as</span> f:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    test_examples <span class="op">=</span> json.load(f)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>testing_examples_raw <span class="op">=</span> [{<span class="st">"raw"</span>: item[<span class="st">'raw'</span>]} <span class="cf">for</span> item <span class="kw">in</span> test_examples][:<span class="dv">5</span>]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(json.dumps(testing_examples_raw, ensure_ascii<span class="op">=</span><span class="va">False</span>, indent<span class="op">=</span><span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[
+    {
+        "raw": "Ic þe secge, Belda se fisc on sæ and Viperus seo næddre and Coruus se fugel, þæt is se hrefen."
+    },
+    {
+        "raw": "&lt;Saga&gt; me for hwam seo sæ si sealt."
+    },
+    {
+        "raw": "Ic þe secge, for þam þe Moyses wearp on sæ þa tin word ðære æaldan æ, þa ða he worhte þa breda for þam þe Israela folc wurðedon deofolgild."
+    },
+    {
+        "raw": "Saga me hwæt sindon þa twegen fet þa þeo sawul habban sceal."
+    },
+    {
+        "raw": "Saga me on hu manegum fiðerum sceal seo sawul fleogan gif heo sceal to heofonum fleogan."
+    }
+]</code></pre>
+</div>
+</div>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<p>Now we are showcasing the model’s ability and reasoning in annotating the following examples:</p>
+<section id="section" class="level4">
+<h4 class="anchored" data-anchor-id="section">1.</h4>
+<div id="921c7bd1" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>testing_examples_raw[<span class="dv">0</span>][<span class="st">'raw'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>'Ic þe secge, Belda se fisc on sæ and Viperus seo næddre and Coruus se fugel, þæt is se hrefen.'</code></pre>
+</div>
+</div>
+<p>Model output:</p>
+<div id="978ec8c3" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>result0 <span class="op">=</span> answer(testing_examples_raw[<span class="dv">0</span>][<span class="st">'raw'</span>]).content[<span class="dv">0</span>].text</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Okay, let's approach this step by step, analyzing the sentence syntactically and morphologically based on the provided examples and annotation guidelines.
+
+Syntactic Analysis:
+The sentence appears to be a response to a question, starting with "Ic þe secge" (I say to you). This suggests it is a matrix clause (IP-MAT-SPE).
+
+The main clause is followed by a list of three noun phrases (NPs) in apposition, each consisting of a proper noun (NR) and a common noun (N) with a determiner (D):
+1. (NP (NR Belda) (D se) (N fisc))
+2. (NP (CONJ and) (NR Viperus) (D seo) (N næddre))
+3. (NP (CONJ and) (NR Coruus) (D se) (N fugel))
+
+After the list, there is a parenthetical clause (-PRN) that provides additional information about the last NP: "þæt is se hrefen" (that is the raven).
+
+Putting it all together, the syntactic annotation would be:
+
+(IP-MAT-SPE (NP-NOM (PRO^N Ic))
+            (NP (PRO þe))
+            (VBP secge)
+            (, ,)
+            (QTP (NP (NR Belda) (D se) (N fisc))
+                 (PP (P on)
+                     (NP (N sæ)))
+                 (CONJP (CONJ and)
+                        (NP (NR Viperus) (D seo) (N næddre)))
+                 (CONJP (CONJ and)
+                        (NP (NR Coruus) (D se) (N fugel)
+                            (, ,)
+                            (PRN-SPE (NP-NOM (D^N þæt))
+                                     (BEPI is)
+                                     (NP-PRD (D se) (N hrefen))))))
+            (. .))
+
+Morphological Analysis:
+Now, let's annotate each word morphologically based on the part-of-speech tags and extended tags:
+
+Ic_PRO^N - personal pronoun, nominative case
+þe_PRO - personal pronoun, accusative case
+secge_VBP - verb, present tense, ambiguous form
+,_, - punctuation, non-final
+Belda_NR - proper noun
+se_D - determiner
+fisc_N - common noun
+on_P - preposition
+sæ_N - common noun
+and_CONJ - coordinating conjunction
+Viperus_NR - proper noun
+seo_D - determiner
+næddre_N - common noun
+and_CONJ - coordinating conjunction
+Coruus_NR - proper noun
+se_D - determiner
+fugel_N - common noun
+,_, - punctuation, non-final
+þæt_D^N - determiner, nominative case
+is_BEPI - verb "to be", present tense, unambiguous indicative
+se_D - determiner
+hrefen_N - common noun
+
+The complete morphological annotation would be:
+
+Ic_PRO^N þe_PRO secge_VBP ,_, Belda_NR se_D fisc_N on_P sæ_N and_CONJ Viperus_NR seo_D næddre_N and_CONJ Coruus_NR se_D fugel_N ,_, þæt_D^N is_BEPI se_D hrefen_N
+
+In conclusion, the syntactic and morphological annotations follow the patterns and guidelines provided in the examples, accurately representing the structure and grammatical properties of the Old English sentence.</code></pre>
+</div>
+</div>
+</section>
+<section id="section-1" class="level4">
+<h4 class="anchored" data-anchor-id="section-1">2.</h4>
+<div id="80449e50" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>testing_examples_raw[<span class="dv">1</span>][<span class="st">'raw'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>'&lt;Saga&gt; me for hwam seo sæ si sealt.'</code></pre>
+</div>
+</div>
+<p>Model output:</p>
+<div id="0dd4bbfb" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>result1 <span class="op">=</span> answer(testing_examples_raw[<span class="dv">1</span>][<span class="st">'raw'</span>])</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Message(id='msg_01QutR4C4aRut4mnGebSGr9z', content=[ContentBlock(text='Okay, let\'s break this down step-by-step and annotate the sentence "&lt;Saga&gt; me for hwam seo sæ si sealt." syntactically and morphologically.\n\nMorphological annotation:\n&lt;Saga&gt;_VBI - "&lt;Saga&gt;" is an imperative verb (VBI).\nme_PRO - "me" is a personal pronoun (PRO).\nfor_P - "for" is a preposition (P).\nhwam_WPRO^D - "hwam" is a wh-pronoun (WPRO) in the dative case (^D).\nseo_D^N - "seo" is a determiner (D) in the nominative case (^N).\nsæ_N^N - "sæ" is a common noun (N) in the nominative case (^N).\nsi_BEPS - "si" is a present tense, unambiguous subjunctive form of the verb BE (BEPS).\nsealt_ADJ^N - "sealt" is an adjective (ADJ) in the nominative case (^N).\n\nFull morphological annotation:\n$Saga_VBI me_PRO for_P hwam_WPRO^D seo_D^N sæ_N^N si_BEPS sealt_ADJ^N\n\nSyntactic annotation:\n(IP-MAT-SPE (VBI $Saga)\n            (NP (PRO me))\n            (CP-QUE-SPE (WPP-2 (P for)\n                               (WNP-DAT (WPRO^D hwam)))\n                        (IP-SUB-SPE (PP *T*-1)\n                                    (NP-NOM (D^N seo) (N^N sæ))\n                                    (BEPS si)\n                                    (ADJP-NOM-PRD (ADJ^N sealt)))))\n\nExplanation:\nThe sentence is an imperative main clause (IP-MAT-SPE) starting with the imperative verb "Saga" (VBI). It is followed by the personal pronoun "me" (PRO) as the indirect object.\n\nThe rest of the sentence is a subordinate question clause (CP-QUE-SPE) introduced by the preposition "for" and the wh-pronoun "hwam" in the dative case (WPP-2). The trace (*T*-1) indicates the original position of the wh-phrase.\n\nInside the subordinate clause (IP-SUB-SPE), we have the subject noun phrase "seo sæ" (NP-NOM) consisting of the determiner "seo" and the noun "sæ", both in the nominative case. The verb "si" is a present subjunctive form of BE (BEPS).\n\nFinally, "sealt" is an adjective phrase (ADJP-NOM-PRD) serving as the predicate of the subordinate clause, agreeing in case with the subject.\n\nIn summary, the sentence is an imperative clause asking the reason why the sea is salty, with the subordinate question clause introduced by "for hwam" (for what reason).', type='text')], model='claude-3-opus-20240229', role='assistant', stop_reason='end_turn', stop_sequence=None, type='message', usage=Usage(input_tokens=16056, output_tokens=751))</code></pre>
+</div>
+</div>
+</section>
+<section id="section-2" class="level4">
+<h4 class="anchored" data-anchor-id="section-2">3.</h4>
+<div id="c5206a35" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>testing_examples_raw[<span class="dv">2</span>][<span class="st">'raw'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<pre><code>'Ic þe secge, for þam þe Moyses wearp on sæ þa tin word ðære æaldan æ, þa ða he worhte þa breda for þam þe Israela folc wurðedon deofolgild.'</code></pre>
+</div>
+</div>
+<p>Model output:</p>
+<div id="c79b2729" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>result2 <span class="op">=</span> answer(testing_examples_raw[<span class="dv">2</span>][<span class="st">'raw'</span>])</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Message(id='msg_012SxmDUFLLkhL2QMpHJ2pmS', content=[ContentBlock(text='Okay, let\'s break this down step-by-step:\n\n1. Split the sentence into words and punctuation:\nIc þe secge , for þam þe Moyses wearp on sæ þa tin word ðære æaldan æ , þa ða he worhte þa breda for þam þe Israela folc wurðedon deofolgild .\n\n2. Morphological annotation:\nIc_PRO^N þe_PRO secge_VBP ,_, for_P þam_D^D þe_C Moyses_NR^N wearp_VBDI on_P sæ_N^A þa_D^A tin_NUM word_N^A ðære_D^G æaldan_ADJ^G æ_N^G ,_, þa_P ða_P he_PRO^N worhte_VBDI þa_D^A breda_N^A for_P þam_D^D þe_C Israela_NR^G folc_N^N wurðedon_VBDI deofolgild_N^A ._.\n\n- Ic: Personal pronoun, nominative case (PRO^N)\n- þe: Personal pronoun, accusative case (PRO)\n- secge: Verb, present tense, 1st person singular (VBP)\n- for: Preposition (P)\n- þam: Demonstrative, dative case (D^D)\n- þe: Complementizer (C)\n- Moyses: Proper noun, nominative case (NR^N)\n- wearp: Verb, past tense, 3rd person singular (VBDI)\n- on: Preposition (P)\n- sæ: Noun, accusative case (N^A)\n- þa: Demonstrative, accusative case (D^A)\n- tin: Numeral (NUM)\n- word: Noun, accusative case (N^A)\n- ðære: Demonstrative, genitive case (D^G)\n- æaldan: Adjective, genitive case (ADJ^G)\n- æ: Noun, genitive case (N^G)\n- þa: Adverb (P)\n- ða: Adverb (P)\n- he: Personal pronoun, nominative case (PRO^N)\n- worhte: Verb, past tense, 3rd person singular (VBDI)\n- þa: Demonstrative, accusative case (D^A)\n- breda: Noun, accusative case (N^A)\n- for: Preposition (P) \n- þam: Demonstrative, dative case (D^D)\n- þe: Complementizer (C)\n- Israela: Proper noun, genitive case (NR^G)\n- folc: Noun, nominative case (N^N) \n- wurðedon: Verb, past tense, 3rd person plural (VBDI)\n- deofolgild: Noun, accusative case (N^A)\n\n3. Syntactic annotation:\n\n(IP-MAT-SPE (NP-NOM (PRO^N Ic))\n      (NP-ACC (PRO þe))\n      (VBP secge)\n      (, ,)\n      (CP-ADV-SPE (P for) (D^D þam)\n            (C þe)\n            (IP-SUB-SPE (NP-NOM (NR^N Moyses))\n                    (VBDI wearp)\n                    (PP (P on)\n                        (NP-ACC (N^A sæ)))\n                    (NP-ACC (D^A þa) (NUM tin) (N^A word)\n                        (NP-GEN (D^G ðære) (ADJ^G æaldan) (N^G æ)))\n                    (, ,)\n                    (CP-ADV-SPE (P þa) (P ða)\n                         (C 0)\n                         (IP-SUB-SPE (NP-NOM (PRO^N he))\n                                 (VBDI worhte)\n                                 (NP-ACC (D^A þa) (N^A breda))\n                                 (PP (P for)\n                                     (NP-DAT (D^D þam)\n                                         (CP-REL-SPE (C þe)\n                                                 (IP-SUB-SPE (NP-NOM (NR^G Israela) (N^N folc))\n                                                         (VBDI wurðedon)\n                                                         (NP-ACC (N^A deofolgild))))))))))\n      (. .))\n\n- The main clause is an IP-MAT-SPE (matrix clause, direct speech) with "Ic" as the subject, "þe" as the object, and "secge" as the verb.\n- The subordinate clause introduced by "for þam þe" is a CP-ADV-SPE (adverbial clause, direct speech) modifying the main clause.\n- Inside the CP-ADV-SPE, there is an IP-SUB-SPE (subordinate clause, direct speech) with "Moyses" as the subject and "wearp" as the verb.\n- The phrase "þa tin word ðære æaldan æ" is the direct object of "wearp", with "tin" as a numeral and "ðære æaldan æ" as a genitive phrase modifying "word".\n- Another subordinate clause is introduced by "þa ða", which is a CP-ADV-SPE modifying the IP-SUB-SPE. It has an empty complementizer (C 0) and an IP-SUB-SPE with "he" (referring to Moses) as the subject and "worhte" as the verb.\n- "þa breda" is the direct object of "worhte".\n- The phrase "for þam þe Israela folc wurðedon deofolgild" is a PP modifying "worhte", with "þam" as a demonstrative and a CP-REL-SPE (relative clause, direct speech) introduced by "þe". Inside the CP-REL-SPE, "Israela folc" is the subject, "wurðedon" is the verb, and "deofolgild" is the direct object.\n\nIn summary, the sentence is a complex one with multiple subordinate clauses and modifiers. The main clause states that the speaker is telling the listener something, and the reason is provided in the subordinate clauses, which describe how Moses threw the ten commandments into the sea when he made the tablets because the people of Israel were worshipping idols.', type='text')], model='claude-3-opus-20240229', role='assistant', stop_reason='end_turn', stop_sequence=None, type='message', usage=Usage(input_tokens=16104, output_tokens=1642))</code></pre>
+</div>
+</div>
+</section>
+<section id="section-3" class="level4">
+<h4 class="anchored" data-anchor-id="section-3">4.</h4>
+<div id="750a59f3" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>testing_examples_raw[<span class="dv">3</span>][<span class="st">'raw'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>'Saga me hwæt sindon þa twegen fet þa þeo sawul habban sceal.'</code></pre>
+</div>
+</div>
+<p>Model output:</p>
+<div id="482615d3" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>result3 <span class="op">=</span> answer(testing_examples_raw[<span class="dv">3</span>][<span class="st">'raw'</span>])</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Message(id='msg_01FWDdaxEAxQiN9vMNvAJEcj', content=[ContentBlock(text='Here is my step-by-step process for annotating the sentence "Saga me hwæt sindon þa twegen fet þa þeo sawul habban sceal" both syntactically and morphologically:\n\nSyntactical annotation:\n\n1. The main clause is an imperative sentence starting with "Saga" (tell). \n2. The direct object is "me" (me). \n3. The remainder is an embedded question (CP-QUE) introduced by "hwæt" (what).\n4. Within the embedded question, the subject is "þa twegen fet" (the two feet) and the verb is "sindon" (are). \n5. "þa þeo sawul habban sceal" (which the soul must have) is a relative clause modifying "þa twegen fet". \n6. Within the relative clause, "þa" is the relative pronoun (object), "þeo sawul" is the subject, "habban" is the infinitive verb, and "sceal" is the modal auxiliary verb.\n\nPutting it all together, the syntactic annotation is:\n\n(IP-MAT-SPE (VBI Saga)\n      (NP (PRO me))\n      (CP-QUE-SPE (WNP-NOM-2 (WPRO^N hwæt))\n              (IP-SUB-SPE (NP-NOM *T*-1)\n                      (BEPI sindon) \n                      (NP-NOM (D^N þa) (NUM^N twegen) (N^N fet)\n                              (CP-REL-SPE (WNP-3 (D^A þa))\n                                     (C 0)\n                                     (IP-SUB-SPE (NP-ACC *T*-3)\n                                             (NP-NOM (D^N þeo) (N^N sawul))\n                                             (VB habban) \n                                             (MDPI sceal)))))))\n      (. .))\n\nMorphological annotation:\n\n1. Saga - VBI (imperative verb)\n2. me - PRO (pronoun)  \n3. hwæt - WPRO^N (nominative interrogative pronoun)\n4. sindon - BEPI (present indicative plural form of \'to be\')\n5. þa - D^N (nominative determiner)\n6. twegen - NUM^N (nominative numeral)\n7. fet - N^N (nominative plural noun)\n8. þa - D^A (accusative determiner) \n9. þeo - D^N (nominative determiner)\n10. sawul - N^N (nominative singular noun) \n11. habban - VB (infinitive verb)\n12. sceal - MDPI (present indicative singular modal verb)\n\nThe full morphological annotation:\n\nSaga_VBI me_PRO hwæt_WPRO^N sindon_BEPI þa_D^N twegen_NUM^N fet_N^N þa_D^A þeo_D^N sawul_N^N habban_VB sceal_MDPI\n\nIn summary, this is an imperative sentence with an embedded question. The question asks what the two feet are that the soul must have. The syntactic annotation reflects the clause structure and grammatical relations, while the morphological annotation marks the part of speech and inflectional information for each word.', type='text')], model='claude-3-opus-20240229', role='assistant', stop_reason='end_turn', stop_sequence=None, type='message', usage=Usage(input_tokens=16063, output_tokens=813))</code></pre>
+</div>
+</div>
+</section>
+<section id="section-4" class="level4">
+<h4 class="anchored" data-anchor-id="section-4">5.</h4>
+<div id="65bf0af3" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>testing_examples_raw[<span class="dv">4</span>][<span class="st">'raw'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>'Saga me on hu manegum fiðerum sceal seo sawul fleogan gif heo sceal to heofonum fleogan.'</code></pre>
+</div>
+</div>
+<p>Model output:</p>
+<div id="10704085" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>result4 <span class="op">=</span> answer(testing_examples_raw[<span class="dv">4</span>][<span class="st">'raw'</span>])</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Message(id='msg_01WbG2qDBs48maNUpi3ycX3A', content=[ContentBlock(text='Here is my step-by-step approach to annotating the given Old English sentence:\n\nSaga me on hu manegum fiðerum sceal seo sawul fleogan gif heo sceal to heofonum fleogan.\n\n1. Identify the main clause and any subordinate clauses:\n   Main clause: "Saga me"\n   Subordinate clause 1: "on hu manegum fiðerum sceal seo sawul fleogan"\n   Subordinate clause 2: "gif heo sceal to heofonum fleogan"\n\n2. Annotate the syntactic structure of the main clause:\n   (IP-MAT-SPE (VBI Saga)\n           (NP (PRO me))\n           ...)\n\n3. Annotate the first subordinate clause:\n   (CP-QUE-SPE (WPP-2 (P on)\n                  (WNP-DAT (WADJ^D hu) (Q^D manegum) (N^D fiðerum)))\n           (IP-SUB-SPE (NP-NOM (D^N seo) (N^N sawul))\n                   (MDPI sceal)\n                   (PP *T*-1)\n                   (VB fleogan)\n                   ...))\n\n4. Annotate the second subordinate clause:\n   (CP-ADV-SPE (C gif)\n           (IP-SUB-SPE (NP-NOM (PRO^N heo))\n                   (MDPI sceal)\n                   (PP (P to)\n                       (NP-DAT (N^D heofonum)))\n                   (VB fleogan)))\n\n5. Combine the annotations:\n   (IP-MAT-SPE (VBI Saga)\n           (NP (PRO me))\n           (CP-QUE-SPE (WPP-2 (P on)\n                          (WNP-DAT (WADJ^D hu) (Q^D manegum) (N^D fiðerum)))\n                   (IP-SUB-SPE (NP-NOM (D^N seo) (N^N sawul))\n                           (MDPI sceal)\n                           (PP *T*-1)\n                           (VB fleogan)\n                           (CP-ADV-SPE (C gif)\n                                   (IP-SUB-SPE (NP-NOM (PRO^N heo))\n                                           (MDPI sceal)\n                                           (PP (P to)\n                                               (NP-DAT (N^D heofonum)))\n                                           (VB fleogan))))))\n   (. .))\n\n6. Annotate the morphological tags:\n   Saga_VBI me_PRO on_P hu_WADJ^D manegum_Q^D fiðerum_N^D sceal_MDPI seo_D^N sawul_N^N fleogan_VB gif_C heo_PRO^N sceal_MDPI to_P heofonum_N^D fleogan_VB\n\nExplanation:\n- The main clause "Saga me" consists of an imperative verb (VBI) and a personal pronoun (PRO).\n- The first subordinate clause is a question (CP-QUE-SPE) introduced by a prepositional phrase (WPP) "on hu manegum fiðerum". It contains a modal verb (MDPI), a subject (NP-NOM), and an infinitive verb (VB).\n- The second subordinate clause is an adverbial clause (CP-ADV-SPE) introduced by the conjunction "gif". It also contains a modal verb (MDPI), a subject (NP-NOM), a prepositional phrase (PP), and an infinitive verb (VB).\n- The morphological tags are assigned based on the part-of-speech and inflectional information of each word.\n\nThe annotation follows the given guidelines and examples, using the appropriate syntactic labels, empty categories, and morphological tags. The structure is hierarchical, with the main clause at the top level and the subordinate clauses nested within it.', type='text')], model='claude-3-opus-20240229', role='assistant', stop_reason='end_turn', stop_sequence=None, type='message', usage=Usage(input_tokens=16072, output_tokens=1002))</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="references" class="level3">
+<h3 class="anchored" data-anchor-id="references">References</h3>
+<ul>
+<li><p>Nivre, Joakim (2016) “Universal Dependencies: A Cross-Linguistic Perspective on Grammar and Lexicon”. In Proceedings of the Workshop on Grammar and Lexicon: interactions and interfaces (GramLex), pp 38–40, Osaka, Japan. The COLING 2016 Organizing Committee.</p></li>
+<li><p>Healey, A. (ed.), John Price Wilkin &amp; Xin Xiang (2004) The Dictionary of Old English web corpus. Toronto: Dictionary of Old English Project, Centre for Medieval Studies, University of Toronto.</p></li>
+<li><p>Taylor, Ann, Anthony Warner, Susan Pintzuk &amp; Frank Beths (2003) The York-Toronto-Helsinki Parsed Corpus of Old English Prose.</p></li>
+</ul>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
